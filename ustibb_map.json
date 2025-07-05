@@ -1,0 +1,52 @@
+{
+  "5.10.1": {
+    "descricao": "Criação de tela HTML ou XHTML ou JSP ou XML ou VTL ou XSL ou Swing ou AWT ou XUI ou PHP",
+    "ustibb": 10,
+    "extensoes": [".html", ".xhtml", ".jsp", ".xml", ".vtl", ".xsl", ".php"]
+  },
+  "5.10.2": {
+    "descricao": "Alteração de tela HTML ou XHTML ou JSP ou XML ou VTL ou XSL ou Swing ou AWT ou XUI ou PHP",
+    "ustibb": 5,
+    "extensoes": [".html", ".xhtml", ".jsp", ".xml", ".vtl", ".xsl", ".php"]
+  },
+  "5.10.3": {
+    "descricao": "Criação CSS ou SCSS",
+    "ustibb": 8,
+    "extensoes": [".css", ".scss"]
+  },
+  "5.10.4": {
+    "descricao": "Alteração CSS ou SCSS",
+    "ustibb": 4,
+    "extensoes": [".css", ".scss"]
+  },
+  "5.10.5": {
+    "descricao": "Criação JavaScript",
+    "ustibb": 10,
+    "extensoes": [".js", ".ts"]
+  },
+  "5.10.6": {
+    "descricao": "Alteração JavaScript",
+    "ustibb": 5,
+    "extensoes": [".js", ".ts"]
+  },
+  "5.10.7": {
+    "descricao": "Criação de arquivo chave/valor ou tipo XML",
+    "ustibb": 2.5,
+    "extensoes": [".xml"]
+  },
+  "5.10.8": {
+    "descricao": "Alteração de arquivo chave/valor ou tipo XML",
+    "ustibb": 1.5,
+    "extensoes": [".xml"]
+  },
+  "5.10.9": {
+    "descricao": "Criação de objetos de Integração e Negócio Java",
+    "ustibb": 5.5,
+    "extensoes": [".java"]
+  },
+  "5.10.10": {
+    "descricao": "Alteração de Objetos de Integração e Negócio Java",
+    "ustibb": 3.5,
+    "extensoes": [".java"]
+  }
+}

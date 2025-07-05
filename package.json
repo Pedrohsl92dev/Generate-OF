@@ -1,0 +1,11 @@
+{
+  "name": "generate-of",
+  "version": "1.0.0",
+  "description": "Git commit extractor",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "license": "MIT"
+}
