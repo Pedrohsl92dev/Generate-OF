@@ -48,5 +48,20 @@
     "descricao": "Alteração de Objetos de Integração e Negócio Java",
     "ustibb": 3.5,
     "extensoes": [".java"]
+  },
+    "5.32.1": {
+    "descricao": "Participar em “ritos” de sala ágil",
+    "ustibb": 19,
+    "extensoes": []
+  },
+  "5.32.2": {
+    "descricao": "Realizar refinamento de requisitos (sprint em andamento)",
+    "ustibb": 17,
+    "extensoes": []
+  },
+  "5.32.3": {
+    "descricao": "Realizar refinamento de história(s) (próxima sprint)",
+    "ustibb": 17,
+    "extensoes": []
   }
 }

@@ -4,5 +4,6 @@
   "since": "2025-06-22",
   "until": "2025-07-22",
   "outputDir": "./output",
-  "allowDuplicates": false
+  "allowDuplicates": false,
+  "task": ""
 }

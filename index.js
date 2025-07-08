@@ -15,6 +15,9 @@ function loadConfig() {
   if (typeof cfg.allowDuplicates !== 'boolean') {
     cfg.allowDuplicates = true;
   }
+  if (typeof cfg.task !== 'string') {
+    cfg.task = '';
+  }
   return cfg;
 }
 
@@ -68,6 +71,72 @@ function processRepo(repoPath, config, ustibbMap) {
   return repoTotal;
 }
 
+function gerarRelatorioFinal(outputDir, task) {
+  const categories = {};
+  const projects = fs.readdirSync(outputDir, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name);
+
+  for (const project of projects) {
+    const filePath = path.join(outputDir, project, 'commits.txt');
+    if (!fs.existsSync(filePath)) {
+      continue;
+    }
+    const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
+    let currentCat = null;
+    for (const line of lines) {
+      if (/^5\.\d+\.\d+ -/.test(line)) {
+        currentCat = line.trim();
+        if (!categories[currentCat]) {
+          categories[currentCat] = {};
+        }
+      } else if (/Total USTIBB|Total geral do projeto/.test(line) || !line.trim()) {
+        continue;
+      } else if (currentCat) {
+        if (!categories[currentCat][project]) {
+          categories[currentCat][project] = [];
+        }
+        categories[currentCat][project].push(line.trim());
+      }
+    }
+  }
+
+  const categoryNames = Object.keys(categories);
+  let outLines = [];
+  categoryNames.forEach((cat, idx) => {
+    outLines.push(cat);
+    outLines.push('');
+    const projects = categories[cat];
+    for (const [proj, lines] of Object.entries(projects)) {
+      outLines.push(`[${proj}]`);
+      outLines.push(...lines);
+      outLines.push('');
+    }
+    if (idx < categoryNames.length - 1) {
+      outLines.push('---');
+      outLines.push('');
+    }
+  });
+
+  const ustibb = loadMap();
+  const extras = ['5.32.1', '5.32.2', '5.32.3'];
+  if (categoryNames.length && extras.length) {
+    outLines.push('---');
+    outLines.push('');
+  }
+  extras.forEach((code, idx) => {
+    if (!ustibb[code]) return;
+    outLines.push(`${code} - ${ustibb[code].descricao}`);
+    outLines.push(`task ${task}`);
+    if (idx < extras.length - 1) {
+      outLines.push('---');
+    }
+    outLines.push('');
+  });
+
+  fs.writeFileSync(path.join(outputDir, 'final-commit-report.txt'), outLines.join('\n'), 'utf8');
+}
+
 function run() {
   const config = loadConfig();
   const ustibbMap = loadMap();
@@ -82,6 +151,7 @@ function run() {
     }
   }
   console.log(`Total geral de USTIBB: ${total}`);
+  gerarRelatorioFinal(config.outputDir, config.task);
 }
 
 run();
