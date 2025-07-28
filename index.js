@@ -47,7 +47,8 @@ function processRepo(repoPath, config, ustibbMap) {
         continue;
       }
       groups[code].seen.add(f.path);
-      groups[code].lines.push(formatLine(f.path, commit));
+      const fullPath = path.join(path.basename(repoPath), f.path);
+      groups[code].lines.push(formatLine(fullPath, commit));
     }
   }
 
