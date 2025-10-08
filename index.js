@@ -15,8 +15,12 @@ function loadConfig() {
   if (typeof cfg.allowDuplicates !== 'boolean') {
     cfg.allowDuplicates = true;
   }
-  if (typeof cfg.task !== 'string') {
-    cfg.task = '';
+  if (typeof cfg.card !== 'string') {
+    if (typeof cfg.task === 'string') {
+      cfg.card = cfg.task;
+    } else {
+      cfg.card = '';
+    }
   }
   return cfg;
 }
@@ -72,7 +76,7 @@ function processRepo(repoPath, config, ustibbMap) {
   return repoTotal;
 }
 
-function gerarRelatorioFinal(outputDir, task) {
+function gerarRelatorioFinal(outputDir, card) {
   const categories = {};
   const projects = fs.readdirSync(outputDir, { withFileTypes: true })
     .filter(d => d.isDirectory())
@@ -128,7 +132,9 @@ function gerarRelatorioFinal(outputDir, task) {
   extras.forEach((code, idx) => {
     if (!ustibb[code]) return;
     outLines.push(`${code} - ${ustibb[code].descricao}`);
-    outLines.push(`task ${task}`);
+    if (card) {
+      outLines.push(`card ${card}`);
+    }
     if (idx < extras.length - 1) {
       outLines.push('---');
     }
@@ -152,7 +158,7 @@ function run() {
     }
   }
   console.log(`Total geral de USTIBB: ${total}`);
-  gerarRelatorioFinal(config.outputDir, config.task);
+  gerarRelatorioFinal(config.outputDir, config.card);
 }
 
 run();
