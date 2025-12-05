@@ -7,22 +7,31 @@ const {
   formatLine
 } = require('./lib/gitUtils');
 const { loadMap, getCodeForFile } = require('./lib/ustibb');
-const { loadAuthorMap, resolveAuthorMatchers } = require('./lib/author');
+
+function getDefaultDateRange() {
+  const now = new Date();
+  const until = now.toISOString().slice(0, 10);
+  const sinceDate = new Date(now);
+  sinceDate.setDate(now.getDate() - 6);
+  const since = sinceDate.toISOString().slice(0, 10);
+  return { since, until };
+}
 
 function loadConfig() {
   const configPath = path.join(__dirname, 'config.json');
   const raw = fs.readFileSync(configPath, 'utf8');
   const cfg = JSON.parse(raw);
-  if (typeof cfg.allowDuplicates !== 'boolean') {
-    cfg.allowDuplicates = true;
-  }
-  if (typeof cfg.card !== 'string') {
-    if (typeof cfg.task === 'string') {
-      cfg.card = cfg.task;
-    } else {
-      cfg.card = '';
-    }
-  }
+  const defaults = getDefaultDateRange();
+
+  cfg.baseDir = cfg.baseDir || '/home/c1321687/Documentos/Projetos';
+  cfg.author = (cfg.author || 'c1321687').trim();
+  cfg.since = cfg.since || defaults.since;
+  cfg.until = cfg.until || defaults.until;
+  cfg.outputDir = cfg.outputDir || './output';
+  cfg.allowDuplicates = typeof cfg.allowDuplicates === 'boolean' ? cfg.allowDuplicates : true;
+  cfg.card = typeof cfg.card === 'string' ? cfg.card : '';
+  cfg.debug = cfg.debug === true || process.env.DEBUG === 'true';
+
   return cfg;
 }
 
@@ -30,10 +39,14 @@ function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-function processRepo(repoPath, config, ustibbMap, authorMatchers) {
+function processRepo(repoPath, config, ustibbMap) {
   console.log(`Processing ${repoPath}`);
-  const commits = getCommits(repoPath, authorMatchers, config.since, config.until);
+  const commits = getCommits(repoPath, config.author, config.since, config.until, config.debug);
   console.log(`  commits found (after author/date filter): ${commits.length}`);
+  if (config.debug && commits.length) {
+    const sample = commits[0];
+    console.log(`  sample commit: ${sample.hash.substring(0, 10)}|${sample.authorName}|${sample.authorEmail}|${sample.authorDate}|${sample.subject}`);
+  }
   const groups = {};
   const globalSeen = new Set();
   let totalFiles = 0;
@@ -163,21 +176,22 @@ function gerarRelatorioFinal(outputDir, card) {
 
 function run() {
   const config = loadConfig();
-  const authorMap = loadAuthorMap();
-  const authorMatchers = resolveAuthorMatchers(config.author, authorMap);
   const ustibbMap = loadMap();
+  if (config.debug) {
+    console.log('Debug mode enabled.');
+  }
   ensureDir(config.outputDir);
   const basePath = path.resolve(config.baseDir);
   if (!fs.existsSync(basePath)) {
     console.error(`Base directory does not exist: ${basePath}`);
     return;
   }
-  const repos = findGitRepos(basePath);
+  const repos = findGitRepos(basePath, [], config.debug);
   console.log(`Found ${repos.length} git repos under ${basePath}`);
   let total = 0;
   for (const repo of repos) {
     try {
-      total += processRepo(repo, config, ustibbMap, authorMatchers);
+      total += processRepo(repo, config, ustibbMap);
     } catch (err) {
       console.error(`Failed to process ${repo}:`, err.message);
     }
