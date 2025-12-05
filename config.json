@@ -1,9 +1,10 @@
 {
   "baseDir": "/home/c1321687/Documentos/Projetos",
-  "author": "C1321687",
-  "since": "2025-06-22",
-  "until": "2025-07-22",
+  "author": "c1321687",
+  "since": "",
+  "until": "",
   "outputDir": "./output",
   "allowDuplicates": false,
-  "card": ""
+  "card": "",
+  "debug": false
 }
