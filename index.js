@@ -7,6 +7,7 @@ const {
   formatLine
 } = require('./lib/gitUtils');
 const { loadMap, getCodeForFile } = require('./lib/ustibb');
+const { loadAuthorMap, resolveAuthorMatchers } = require('./lib/author');
 
 function loadConfig() {
   const configPath = path.join(__dirname, 'config.json');
@@ -29,13 +30,19 @@ function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-function processRepo(repoPath, config, ustibbMap) {
+function processRepo(repoPath, config, ustibbMap, authorMatchers) {
   console.log(`Processing ${repoPath}`);
-  const commits = getCommits(repoPath, config.author, config.since, config.until);
+  const commits = getCommits(repoPath, authorMatchers, config.since, config.until);
+  console.log(`  commits found (after author/date filter): ${commits.length}`);
   const groups = {};
+  const globalSeen = new Set();
+  let totalFiles = 0;
+  let addedFiles = 0;
+  let skippedDuplicates = 0;
 
   for (const commit of commits) {
     const files = getFilesForCommit(repoPath, commit.hash);
+    totalFiles += files.length;
     for (const f of files) {
       const code = getCodeForFile(ustibbMap, f.path, f.status);
       if (!code) continue;
@@ -47,14 +54,21 @@ function processRepo(repoPath, config, ustibbMap) {
           seen: new Set()
         };
       }
-      if (!config.allowDuplicates && groups[code].seen.has(f.path)) {
+      const pathKey = f.path;
+      if (!config.allowDuplicates && (groups[code].seen.has(pathKey) || globalSeen.has(pathKey))) {
+        skippedDuplicates++;
         continue;
       }
-      groups[code].seen.add(f.path);
+      groups[code].seen.add(pathKey);
+      globalSeen.add(pathKey);
       const fullPath = path.join(path.basename(repoPath), f.path);
       groups[code].lines.push(formatLine(fullPath, commit));
+      addedFiles++;
     }
   }
+
+  console.log(`  files scanned: ${totalFiles}`);
+  console.log(`  files added: ${addedFiles}${config.allowDuplicates ? '' : ` (skipped duplicates: ${skippedDuplicates})`}`);
 
   const repoName = path.basename(repoPath);
   const outputDir = path.join(config.outputDir, repoName);
@@ -70,6 +84,9 @@ function processRepo(repoPath, config, ustibbMap) {
     output.push(...g.lines);
     output.push(`Total USTIBB: ${g.lines.length} x ${g.ustibb} = ${subtotal}`);
     output.push('');
+  }
+  if (!output.length) {
+    output.push(`Nenhum commit encontrado para ${config.author} entre ${config.since} e ${config.until}.`);
   }
   output.push(`Total geral do projeto: ${repoTotal}`);
   fs.writeFileSync(path.join(outputDir, 'commits.txt'), output.join('\n'), 'utf8');
@@ -146,13 +163,21 @@ function gerarRelatorioFinal(outputDir, card) {
 
 function run() {
   const config = loadConfig();
+  const authorMap = loadAuthorMap();
+  const authorMatchers = resolveAuthorMatchers(config.author, authorMap);
   const ustibbMap = loadMap();
   ensureDir(config.outputDir);
-  const repos = findGitRepos(path.resolve(config.baseDir));
+  const basePath = path.resolve(config.baseDir);
+  if (!fs.existsSync(basePath)) {
+    console.error(`Base directory does not exist: ${basePath}`);
+    return;
+  }
+  const repos = findGitRepos(basePath);
+  console.log(`Found ${repos.length} git repos under ${basePath}`);
   let total = 0;
   for (const repo of repos) {
     try {
-      total += processRepo(repo, config, ustibbMap);
+      total += processRepo(repo, config, ustibbMap, authorMatchers);
     } catch (err) {
       console.error(`Failed to process ${repo}:`, err.message);
     }
