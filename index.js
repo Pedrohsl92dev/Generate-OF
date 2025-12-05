@@ -4,7 +4,6 @@ const {
   findGitRepos,
   getCommits,
   getFilesForCommit,
-  getAuthorsForRange,
   formatLine
 } = require('./lib/gitUtils');
 const { loadMap, getCodeForFile } = require('./lib/ustibb');
@@ -35,18 +34,6 @@ function processRepo(repoPath, config, ustibbMap, authorMatchers) {
   console.log(`Processing ${repoPath}`);
   const commits = getCommits(repoPath, authorMatchers, config.since, config.until);
   console.log(`  commits found (after author/date filter): ${commits.length}`);
-  if (commits.length === 0) {
-    const authors = getAuthorsForRange(repoPath, config.since, config.until);
-    if (authors.length) {
-      console.log('  authors found in range (counts):');
-      authors.slice(0, 10).forEach(a => console.log(`    ${a.count}\t${a.name}`));
-      if (authors.length > 10) {
-        console.log('    ...');
-      }
-    } else {
-      console.log('  no authors found in range for this repo.');
-    }
-  }
   const groups = {};
   const globalSeen = new Set();
   let totalFiles = 0;
@@ -178,7 +165,6 @@ function run() {
   const config = loadConfig();
   const authorMap = loadAuthorMap();
   const authorMatchers = resolveAuthorMatchers(config.author, authorMap);
-  console.log(`Author matchers in use for ${config.author}: ${authorMatchers.join(', ')}`);
   const ustibbMap = loadMap();
   ensureDir(config.outputDir);
   const basePath = path.resolve(config.baseDir);
