@@ -29,7 +29,7 @@ function loadConfig() {
   cfg.until = cfg.until || defaults.until;
   cfg.outputDir = cfg.outputDir || './output';
   cfg.allowDuplicates = typeof cfg.allowDuplicates === 'boolean' ? cfg.allowDuplicates : true;
-  cfg.card = typeof cfg.card === 'string' ? cfg.card : '';
+  cfg.card = typeof cfg.card === 'string' ? cfg.card.trim() : '';
   cfg.debug = cfg.debug === true || process.env.DEBUG === 'true';
 
   return cfg;
@@ -153,23 +153,24 @@ function gerarRelatorioFinal(outputDir, card) {
     }
   });
 
-  const ustibb = loadMap();
-  const extras = ['5.32.1', '5.32.2', '5.32.3'];
-  if (categoryNames.length && extras.length) {
-    outLines.push('---');
-    outLines.push('');
-  }
-  extras.forEach((code, idx) => {
-    if (!ustibb[code]) return;
-    outLines.push(`${code} - ${ustibb[code].descricao}`);
-    if (card) {
-      outLines.push(`card ${card}`);
-    }
-    if (idx < extras.length - 1) {
+  const normalizedCard = typeof card === 'string' ? card.trim() : '';
+  if (normalizedCard) {
+    const ustibb = loadMap();
+    const extras = ['5.32.1', '5.32.2', '5.32.3'];
+    if (categoryNames.length && extras.length) {
       outLines.push('---');
+      outLines.push('');
     }
-    outLines.push('');
-  });
+    extras.forEach((code, idx) => {
+      if (!ustibb[code]) return;
+      outLines.push(`${code} - ${ustibb[code].descricao}`);
+      outLines.push(`card ${normalizedCard}`);
+      if (idx < extras.length - 1) {
+        outLines.push('---');
+      }
+      outLines.push('');
+    });
+  }
 
   fs.writeFileSync(path.join(outputDir, 'final-commit-report.txt'), outLines.join('\n'), 'utf8');
 }
